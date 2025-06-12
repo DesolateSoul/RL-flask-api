@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1>{{ video.title }}</h1>
+        <div class="user-info">
+            Вы вошли как <strong>{{ username }}</strong> ({{ session.role }}) |
+            <a href="{{ url_for('videos') }}">Назад к списку</a> |
+            <a href="{{ url_for('logout') }}">Выйти</a>
+        </div>
+    </div>
+
+    <div class="video-container">
+        {% if video_data %}
+            <video controls width="100%">
+                <source src="data:video/mp4;base64,{{ video_data }}" type="video/mp4">
+                Ваш браузер не поддерживает видео тег.
+            </video>
+        {% else %}
+            <p class="no-video">Видео недоступно.</p>
+        {% endif %}
+    </div>
+
+    <div class="video-info">
+        <h2>Информация о видео</h2>
+        <p><strong>Автор:</strong> {{ video.user.username if video.user else 'Неизвестен' }}</p>
+        <p><strong>Описание:</strong> {{ video.description or 'Нет описания' }}</p>
+        <p><strong>Дата создания:</strong> {{ video.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+        <p><strong>Длительность:</strong> {{ "%.2f"|format(video.duration) }} сек.</p>
+        <p><strong>Параметры:</strong>
+            <ul>
+                <li>Gravity: {{ video.env_params.split(',')[0].split(':')[1] if video.env_params else 'N/A' }}</li>
+                <li>Enable Wind: {{ video.env_params.split(',')[1].split(':')[1] if video.env_params else 'N/A' }}</li>
+                <li>Wind Power: {{ video.env_params.split(',')[2].split(':')[1] if video.env_params else 'N/A' }}</li>
+                <li>Turbulence Power: {{ video.env_params.split(',')[3].split(':')[1][:-1] if video.env_params else 'N/A' }}</li>
+            </ul>
+        </p>
+        {% if session.role == 'admin' or (video.user and video.user.id == session.user_id) %}
+            <form action="{{ url_for('delete_video', video_id=video.id) }}" method="POST" class="delete-form">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите удалить это видео?')">Удалить видео</button>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}
